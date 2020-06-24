@@ -4,8 +4,13 @@ const Blog = mongoose.model("Blog");
 var slugify = require("slugify");
 
 exports.getBlogs = async (req, res) => {
-  const blogs = await Blog.find({});
-  return res.json({ blogs });
+  const blogs = await Blog.find({status: 'published'}).sort({createdAt: -1});
+  return res.json( blogs );
+};
+
+exports.getPortfolios = async (req, res) => {
+  const portfolios = await Portfolio.find({});
+  return res.json(portfolios);
 };
 
 exports.getPBlogs = async (req, res) => {

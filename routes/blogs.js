@@ -29,6 +29,6 @@ router.post("/", checkJwt, checkRole("admin"), createBlog);
 
 router.patch("/:id", checkJwt, checkRole("admin"), updateBlog);
 
-router.delete("/:id", deleteBlog);
+router.delete("/:id", checkJwt, checkRole("admin"), deleteBlog);
 
 module.exports = router;

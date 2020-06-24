@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
+const uniqueSlug = require("unique-slug");
 const Blog = mongoose.model("Blog");
+var slugify = require("slugify");
 
 exports.getBlogs = async (req, res) => {
   const blogs = await Blog.find({});
@@ -58,6 +60,20 @@ exports.createBlog = async (req, res) => {
   }
 };
 
+const _saveBlog = async (blog) => {
+  try {
+    const createdBlog = await blog.save();
+    return createdBlog;
+  } catch (e) {
+    if (e.code === 11000 && e.keyPattern && e.keyPattern.slug) {
+      blog.slug += `-${uniqueSlug()}`;
+      return _saveBlog(blog);
+    }
+
+    throw e;
+  }
+};
+
 exports.updateBlog = async (req, res) => {
   const {
     body,
@@ -69,14 +85,18 @@ exports.updateBlog = async (req, res) => {
       return res.status(422).send(err.message);
     }
 
-    // check if user is publishing blog
-    // and if user is publishing then create slug
+    if (body.status && body.status === "published" && !blog.slug) {
+      blog.slug = slugify(blog.title, {
+        replacement: "-",
+        lower: true,
+      });
+    }
 
     blog.set(body);
     blog.updateAt = new Date();
 
     try {
-      const updatedBlog = await blog.save();
+      const updatedBlog = await _saveBlog(blog);
       return res.json(updatedBlog);
     } catch (err) {
       return res.status(422).send(err.message);
